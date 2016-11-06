@@ -1,4 +1,5 @@
 import os
+import argparse
 import sys
 import ConfigParser
 import ldap
@@ -17,15 +18,22 @@ class EnvironmentSettings:
     group_by = ''
 
     def __init__(self):
+        self.parse_cli_args()
         self.get_runtime_variables()
         self.validate_environment_variables()
 
+    def parse_cli_args(self):
+        ''' Command line argument processing '''
+
+        parser = argparse.ArgumentParser(description='Produce an Ansible Inventory file based on ldap')
+        parser.add_argument('--list', action='store_true', default=True,
+                            help='List instances (default: True)')
     # Get the required variables for execution
     # Check if the variables are defined if the .ini file exists, if not check the environment
     def get_runtime_variables(self):
         config = ConfigParser.ConfigParser()
-        if os.path.isfile("ldapinv.ini"):
-            config.read("ldapinv.ini")
+        if (os.path.isfile(os.path.dirname(os.path.realpath(__file__)) + "/ldapinv.ini")):
+            config.read(os.path.dirname(os.path.realpath(__file__)) + "/ldapinv.ini")
             self.ldapUri = config.get("connection", "LDAP_URI")
             self.serverBase = config.get("connection", "LDAP_SERVER_BASE")
             self.bindUser = config.get("connection", "LDAP_BIND_USER")
