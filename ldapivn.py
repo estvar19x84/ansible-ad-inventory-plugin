@@ -84,7 +84,7 @@ class AdLdapConnection:
 
         if self.args.host:
         # data_to_print += self.get_host_info()
-            d = { }
+            d = {"_meta": {"hostvars": {}}}
             json.dumps(d, sort_keys=True, indent=2)
         else:
             print self.get_hosts()
@@ -99,7 +99,7 @@ class AdLdapConnection:
         self.args = parser.parse_args()
 
     def get_hosts(self):
-        d = {}
+        d = {"_meta" : {"hostvars" : {}}}
         result_id = self.conn.search(runtime_environment.serverBase, ldap.SCOPE_SUBTREE,
                                      runtime_environment.criteria)
         result_set = []
