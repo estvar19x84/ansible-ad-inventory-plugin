@@ -2,6 +2,7 @@ import os
 import sys
 import ConfigParser
 import ldap
+import json
 
 
 class EnvironmentSettings:
@@ -78,6 +79,7 @@ class AdLdapConnection:
         else:
             self.conn.simple_bind_s(runtime_environment.bindUser, runtime_environment.bindPassword)
 
+
     def get_hosts(self):
         d = {}
         result_id = self.conn.search(runtime_environment.serverBase, ldap.SCOPE_SUBTREE,
@@ -90,9 +92,6 @@ class AdLdapConnection:
                     result_set.append(result_data)
             else:
                 break
-
-        #for group in runtime_environment.group_by:
-        #        d[group] = [ ]
 
         # Define all keys
         for entry in result_set:
@@ -114,7 +113,7 @@ class AdLdapConnection:
                             d[value[0]].append(instance[0])
                         else:
                             d[value[0]].append(instance)
-        print d
+        return json.dumps(d, sort_keys=True, indent=2)
 
 var_error_message = "Make sure LDAP_URI, LDAP_SERVER_BASE, LDAP_BIND_USER, LDAP_BIND_PASSWORD, ATTRIBUTE and ANONYMOUS are properly defined"
 
@@ -122,7 +121,7 @@ var_error_message = "Make sure LDAP_URI, LDAP_SERVER_BASE, LDAP_BIND_USER, LDAP_
 try:
     runtime_environment = EnvironmentSettings()
     conn = AdLdapConnection(runtime_environment)
-    conn.get_hosts()
+    print conn.get_hosts()
 except ConfigParser.NoOptionError as err:
     print ("Error in ldapinv.ini", var_error_message )
 except EnvironmentVariablesError as err:
