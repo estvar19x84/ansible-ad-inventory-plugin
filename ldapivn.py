@@ -18,16 +18,9 @@ class EnvironmentSettings:
     group_by = ''
 
     def __init__(self):
-        self.parse_cli_args()
         self.get_runtime_variables()
         self.validate_environment_variables()
 
-    def parse_cli_args(self):
-        ''' Command line argument processing '''
-
-        parser = argparse.ArgumentParser(description='Produce an Ansible Inventory file based on ldap')
-        parser.add_argument('--list', action='store_true', default=True,
-                            help='List instances (default: True)')
     # Get the required variables for execution
     # Check if the variables are defined if the .ini file exists, if not check the environment
     def get_runtime_variables(self):
@@ -79,14 +72,31 @@ class EnvironmentVariablesError(Exception):
 
 class AdLdapConnection:
     conn = ''
+    args = ''
 
     def __init__(self,runtime_environment):
+        self.parse_cli_args()
         self.conn = ldap.initialize(runtime_environment.ldapUri)
         if runtime_environment.anonymous:
             self.conn.simple_bind_s()
         else:
             self.conn.simple_bind_s(runtime_environment.bindUser, runtime_environment.bindPassword)
 
+        if self.args.host:
+        # data_to_print += self.get_host_info()
+            d = { }
+            json.dumps(d, sort_keys=True, indent=2)
+        else:
+            print self.get_hosts()
+
+    def parse_cli_args(self):
+        ''' Command line argument processing '''
+
+        parser = argparse.ArgumentParser(description='Produce an Ansible Inventory file based on ldap')
+        parser.add_argument('--list', action='store_true', default=True,
+                            help='List instances (default: True)')
+        parser.add_argument('--host', action='store', help='Get all the variables about a specific instance')
+        self.args = parser.parse_args()
 
     def get_hosts(self):
         d = {}
@@ -129,7 +139,6 @@ var_error_message = "Make sure LDAP_URI, LDAP_SERVER_BASE, LDAP_BIND_USER, LDAP_
 try:
     runtime_environment = EnvironmentSettings()
     conn = AdLdapConnection(runtime_environment)
-    print conn.get_hosts()
 except ConfigParser.NoOptionError as err:
     print ("Error in ldapinv.ini", var_error_message )
 except EnvironmentVariablesError as err:
@@ -142,7 +151,7 @@ except ldap.INVALID_CREDENTIALS as err:
     print ("Invalid bind credentials for user:", runtime_environment.bindUser)
 except OSError as err:
     print("OS error: {0}".format(err))
-except:
-    print("Unexpected Error:", sys.exc_info()[0])
+except Exception as err:
+    print("Unexpected Error:", err.message)
 
 
